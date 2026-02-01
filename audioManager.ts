@@ -139,6 +139,12 @@ export const playJumpSound = () => {
   if(res) res.osc.frequency.linearRampToValueAtTime(500, res.ctx.currentTime + 0.1);
 };
 
+export const playDoubleJumpSound = () => {
+  if (isMuted) return;
+  const res = createOscillator('square', 450, 0.15, 0.1);
+  if(res) res.osc.frequency.linearRampToValueAtTime(900, res.ctx.currentTime + 0.15);
+};
+
 export const playMaskToggleSound = (isActive: boolean) => {
   if (isMuted) return;
   const res = createOscillator(isActive ? 'square' : 'triangle', isActive ? 150 : 400, 0.4, 0.1);

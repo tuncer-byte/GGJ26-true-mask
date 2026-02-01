@@ -6,6 +6,8 @@ export const GRAVITY = 0.65; // Reduced slightly for better air time
 export const FRICTION = 0.85;
 export const MOVE_SPEED = 6;
 export const JUMP_FORCE = -14; // Increased from -12.5 to help reach platforms
+export const DOUBLE_JUMP_FORCE = -12; // Slightly lower for the second jump
+export const MAX_JUMPS = 2;
 export const MAX_FALL_SPEED = 16;
 
 // Player

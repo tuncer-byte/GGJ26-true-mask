@@ -5,12 +5,12 @@ import {
 } from '../types';
 import { 
   CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, FRICTION, 
-  MOVE_SPEED, JUMP_FORCE, PLAYER_WIDTH, PLAYER_HEIGHT,
+  MOVE_SPEED, JUMP_FORCE, DOUBLE_JUMP_FORCE, MAX_JUMPS, PLAYER_WIDTH, PLAYER_HEIGHT,
   MAX_SANITY, SANITY_COST_PER_USE, SANITY_REGEN_RATE, COLORS
 } from '../constants';
 import { LEVELS } from '../levels';
 import { 
-  playJumpSound, playMaskToggleSound, playDieSound, 
+  playJumpSound, playDoubleJumpSound, playMaskToggleSound, playDieSound, 
   playWinSound, playStepSound, stopMaskSound, playButtonSound 
 } from '../audioManager';
 
@@ -25,12 +25,13 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   onStateChange, onMaskStateChange, gameState, currentLevelIdx 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number>(0);
   
   const playerRef = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     w: PLAYER_WIDTH, h: PLAYER_HEIGHT,
     isGrounded: false,
+    jumpCount: 0,
     sanity: MAX_SANITY,
     revealTimer: 0,
     facingRight: true,
@@ -73,6 +74,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       w: PLAYER_WIDTH,
       h: PLAYER_HEIGHT,
       isGrounded: false,
+      jumpCount: 0,
       sanity: MAX_SANITY,
       revealTimer: 0,
       facingRight: true,
@@ -86,8 +88,40 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
       
+      if (gameState !== GameState.PLAYING) {
+          // Pause / Reset logic for non-playing states
+          if (e.code === 'Escape') {
+             if (gameState === GameState.PAUSED) onStateChange(GameState.PLAYING);
+          }
+          if (e.code === 'KeyR' && gameState === GameState.GAME_OVER) {
+             resetLevelData(currentLevelIdx);
+             onStateChange(GameState.PLAYING);
+          }
+          return;
+      }
+
+      // --- PLAYING STATE INPUTS ---
+
+      // Jump (Single & Double)
+      if ((e.code === 'Space' || e.code === 'ArrowUp') && !e.repeat) {
+          const p = playerRef.current;
+          
+          if (p.isGrounded) {
+              // First Jump
+              p.vy = JUMP_FORCE;
+              p.isGrounded = false;
+              p.jumpCount = 1;
+              playJumpSound();
+          } else if (p.jumpCount < MAX_JUMPS) {
+              // Double Jump
+              p.vy = DOUBLE_JUMP_FORCE;
+              p.jumpCount++;
+              playDoubleJumpSound();
+          }
+      }
+      
       // Mask Trigger
-      if (e.code === 'KeyE' && gameState === GameState.PLAYING) {
+      if (e.code === 'KeyE') {
         const p = playerRef.current;
         const level = levelRef.current;
         
@@ -110,12 +144,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       
       // Pause
       if (e.code === 'Escape') {
-        if (gameState === GameState.PLAYING) onStateChange(GameState.PAUSED);
-        else if (gameState === GameState.PAUSED) onStateChange(GameState.PLAYING);
+         onStateChange(GameState.PAUSED);
       }
 
       // Reset
-      if (e.code === 'KeyR' && (gameState === GameState.PLAYING || gameState === GameState.GAME_OVER)) {
+      if (e.code === 'KeyR') {
         resetLevelData(currentLevelIdx);
         onStateChange(GameState.PLAYING);
       }
@@ -162,13 +195,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       }
     } else {
       p.stepTimer = 250; 
-    }
-
-    // Jump
-    if ((keysRef.current['Space'] || keysRef.current['ArrowUp']) && p.isGrounded) {
-      p.vy = JUMP_FORCE;
-      p.isGrounded = false;
-      playJumpSound();
     }
 
     // Apply Physics
@@ -248,6 +274,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
             if (p.vy > 0) {
               p.y = plat.y - p.h;
               p.isGrounded = true;
+              p.jumpCount = 0; // Reset jumps on landing
               p.vy = 0;
             } else if (p.vy < 0) {
               p.y = plat.y + plat.h;

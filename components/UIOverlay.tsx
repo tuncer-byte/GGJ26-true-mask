@@ -141,7 +141,7 @@ const UIOverlay: React.FC<UIOverlayProps> = ({
         )}
         
         {/* Level Info Footer */}
-        {(gameState === GameState.MENU || gameState === GameState.LEVEL_COMPLETE) && gameState !== GameState.SETTINGS && (
+        {(gameState === GameState.MENU || gameState === GameState.LEVEL_COMPLETE) && (
              <div className="mt-8 pt-4 border-t-2 border-gray-100">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">NEXT UP</div>
                 <div className="text-xl font-bold text-gray-800">{levelInfo.name}</div>

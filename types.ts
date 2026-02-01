@@ -80,6 +80,7 @@ export interface Player extends Rect {
   vx: number;
   vy: number;
   isGrounded: boolean;
+  jumpCount: number; // For double jump
   sanity: number;
   revealTimer: number; // Time remaining for mask vision
   facingRight: boolean;

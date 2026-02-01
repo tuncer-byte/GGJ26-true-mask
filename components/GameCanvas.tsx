@@ -19,10 +19,11 @@ interface GameCanvasProps {
   onMaskStateChange: (active: boolean) => void;
   gameState: GameState;
   currentLevelIdx: number;
+  resetKey: number; // New prop to force reset
 }
 
 const GameCanvas: React.FC<GameCanvasProps> = ({ 
-  onStateChange, onMaskStateChange, gameState, currentLevelIdx 
+  onStateChange, onMaskStateChange, gameState, currentLevelIdx, resetKey
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>(0);
@@ -42,7 +43,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   const keysRef = useRef<{ [key: string]: boolean }>({});
   
   // We need a mutable copy of the level data (for button states)
-  const levelRef = useRef<LevelData>(JSON.parse(JSON.stringify(LEVELS[0])));
+  // Safety check: ensure level index exists
+  const safeLevelIdx = LEVELS[currentLevelIdx] ? currentLevelIdx : 0;
+  const levelRef = useRef<LevelData>(JSON.parse(JSON.stringify(LEVELS[safeLevelIdx])));
 
   // Cleanup audio on unmount or pause
   useEffect(() => {
@@ -51,14 +54,17 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     }
   }, [gameState]);
 
-  // Load Level with Deep Reset
+  // Load Level with Deep Reset (Triggered by Level Change OR Reset Key)
   useEffect(() => {
     resetLevelData(currentLevelIdx);
-  }, [currentLevelIdx]);
+  }, [currentLevelIdx, resetKey]);
 
   const resetLevelData = (idx: number) => {
+    // Safety check for index
+    const actualIdx = (idx >= 0 && idx < LEVELS.length) ? idx : 0;
+    
     // Deep copy to ensure we don't mutate the const LEVELS array
-    const freshLevel = JSON.parse(JSON.stringify(LEVELS[idx]));
+    const freshLevel = JSON.parse(JSON.stringify(LEVELS[actualIdx]));
     levelRef.current = freshLevel;
     resetPlayer(freshLevel.startPos);
     onMaskStateChange(false);
@@ -93,10 +99,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
           if (e.code === 'Escape') {
              if (gameState === GameState.PAUSED) onStateChange(GameState.PLAYING);
           }
-          if (e.code === 'KeyR' && gameState === GameState.GAME_OVER) {
-             resetLevelData(currentLevelIdx);
-             onStateChange(GameState.PLAYING);
-          }
+          // Note: 'KeyR' reset logic is now handled by UI Overlay button -> resetKey prop
           return;
       }
 
@@ -145,12 +148,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       // Pause
       if (e.code === 'Escape') {
          onStateChange(GameState.PAUSED);
-      }
-
-      // Reset
-      if (e.code === 'KeyR') {
-        resetLevelData(currentLevelIdx);
-        onStateChange(GameState.PLAYING);
       }
     };
 

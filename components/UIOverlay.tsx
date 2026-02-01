@@ -6,6 +6,7 @@ interface UIOverlayProps {
   gameState: GameState;
   onStart: () => void;
   onRestart: () => void;
+  onFullRestart: () => void; // Restart game from level 1
   onNextLevel: () => void;
   onOpenSettings: () => void;
   onCloseSettings: () => void;
@@ -13,7 +14,7 @@ interface UIOverlayProps {
 }
 
 const UIOverlay: React.FC<UIOverlayProps> = ({ 
-  gameState, onStart, onRestart, onNextLevel, 
+  gameState, onStart, onRestart, onFullRestart, onNextLevel, 
   onOpenSettings, onCloseSettings, levelInfo 
 }) => {
   const [isMuted, setIsMuted] = React.useState(false);
@@ -132,7 +133,7 @@ const UIOverlay: React.FC<UIOverlayProps> = ({
               Thanks for playing.
             </p>
             <button 
-              onClick={() => window.location.reload()}
+              onClick={onFullRestart}
               className="cartoon-btn px-6 py-3 bg-gray-200 hover:bg-gray-100 text-black text-lg"
             >
               PLAY AGAIN

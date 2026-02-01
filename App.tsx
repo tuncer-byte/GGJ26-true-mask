@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
   const [scale, setScale] = useState(1);
   const [isMaskActive, setIsMaskActive] = useState(false);
+  const [resetKey, setResetKey] = useState(0); // Forces GameCanvas to reset
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Scaling Logic to fit screen
@@ -50,11 +51,21 @@ const App: React.FC = () => {
   };
 
   const handleStart = () => {
+    setResetKey(prev => prev + 1); // Ensure fresh start
     setGameState(GameState.PLAYING);
     startBackgroundMusic();
   };
 
   const handleRestart = () => {
+    setResetKey(prev => prev + 1); // Signal GameCanvas to reset logic
+    setGameState(GameState.PLAYING);
+    startBackgroundMusic();
+  };
+
+  const handleFullRestart = () => {
+    // Restart from Level 1
+    setCurrentLevelIdx(0);
+    setResetKey(prev => prev + 1);
     setGameState(GameState.PLAYING);
     startBackgroundMusic();
   };
@@ -99,6 +110,7 @@ const App: React.FC = () => {
             onMaskStateChange={handleMaskStateChange}
             gameState={gameState}
             currentLevelIdx={currentLevelIdx}
+            resetKey={resetKey}
           />
         </div>
       </div>
@@ -108,12 +120,13 @@ const App: React.FC = () => {
         gameState={gameState} 
         onStart={handleStart}
         onRestart={handleRestart}
+        onFullRestart={handleFullRestart}
         onNextLevel={handleNextLevel}
         onOpenSettings={handleOpenSettings}
         onCloseSettings={handleCloseSettings}
         levelInfo={{
-          name: LEVELS[currentLevelIdx].name,
-          description: LEVELS[currentLevelIdx].description
+          name: LEVELS[currentLevelIdx] ? LEVELS[currentLevelIdx].name : "Unknown",
+          description: LEVELS[currentLevelIdx] ? LEVELS[currentLevelIdx].description : ""
         }}
       />
 

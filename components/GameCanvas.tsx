@@ -356,9 +356,21 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
 
   // --- CARTOON RENDERING ---
 
+  // REPLACED ctx.roundRect with explicit path drawing for better compatibility
   const drawCartoonRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, fill: string, stroke: string = '#000') => {
+    const r = 8; // radius
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 8);
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    
     ctx.fillStyle = fill;
     ctx.fill();
     ctx.lineWidth = 3;
@@ -368,7 +380,19 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     // Highlight
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.beginPath();
-    ctx.roundRect(x + 4, y + 4, w - 8, h/3, 4);
+    const highlightH = h / 3;
+    const r2 = 4;
+    // Simple rounded rect for highlight
+    ctx.moveTo(x + 4 + r2, y + 4);
+    ctx.lineTo(x + 4 + (w - 8) - r2, y + 4);
+    ctx.quadraticCurveTo(x + 4 + (w - 8), y + 4, x + 4 + (w - 8), y + 4 + r2);
+    ctx.lineTo(x + 4 + (w - 8), y + 4 + highlightH - r2);
+    ctx.quadraticCurveTo(x + 4 + (w - 8), y + 4 + highlightH, x + 4 + (w - 8) - r2, y + 4 + highlightH);
+    ctx.lineTo(x + 4 + r2, y + 4 + highlightH);
+    ctx.quadraticCurveTo(x + 4, y + 4 + highlightH, x + 4, y + 4 + highlightH - r2);
+    ctx.lineTo(x + 4, y + 4 + r2);
+    ctx.quadraticCurveTo(x + 4, y + 4, x + 4 + r2, y + 4);
+    ctx.closePath();
     ctx.fill();
   };
 
@@ -465,7 +489,17 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
         // Dotted outline for inactive toggle platforms
         if (plat.type === PlatformType.TOGGLE && !plat.isActive) {
             ctx.beginPath();
-            ctx.roundRect(plat.x, plat.y, plat.w, plat.h, 8);
+            const r = 8;
+            ctx.moveTo(plat.x + r, plat.y);
+            ctx.lineTo(plat.x + plat.w - r, plat.y);
+            ctx.quadraticCurveTo(plat.x + plat.w, plat.y, plat.x + plat.w, plat.y + r);
+            ctx.lineTo(plat.x + plat.w, plat.y + plat.h - r);
+            ctx.quadraticCurveTo(plat.x + plat.w, plat.y + plat.h, plat.x + plat.w - r, plat.y + plat.h);
+            ctx.lineTo(plat.x + r, plat.y + plat.h);
+            ctx.quadraticCurveTo(plat.x, plat.y + plat.h, plat.x, plat.y + plat.h - r);
+            ctx.lineTo(plat.x, plat.y + r);
+            ctx.quadraticCurveTo(plat.x, plat.y, plat.x + r, plat.y);
+            
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
@@ -541,9 +575,21 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     const barX = 20;
     const barY = 20;
     
-    ctx.fillStyle = '#fff';
+    // Manual rounded rect for UI Bar
+    const r = 10;
     ctx.beginPath();
-    ctx.roundRect(barX, barY, barW, barH, 10);
+    ctx.moveTo(barX + r, barY);
+    ctx.lineTo(barX + barW - r, barY);
+    ctx.quadraticCurveTo(barX + barW, barY, barX + barW, barY + r);
+    ctx.lineTo(barX + barW, barY + barH - r);
+    ctx.quadraticCurveTo(barX + barW, barY + barH, barX + barW - r, barY + barH);
+    ctx.lineTo(barX + r, barY + barH);
+    ctx.quadraticCurveTo(barX, barY + barH, barX, barY + barH - r);
+    ctx.lineTo(barX, barY + r);
+    ctx.quadraticCurveTo(barX, barY, barX + r, barY);
+    ctx.closePath();
+    
+    ctx.fillStyle = '#fff';
     ctx.fill();
     ctx.lineWidth = 3;
     ctx.strokeStyle = '#000';
@@ -552,8 +598,23 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     const fillW = (barW - 8) * (p.sanity / MAX_SANITY);
     if (fillW > 0) {
       ctx.fillStyle = p.sanity < SANITY_COST_PER_USE ? '#ccc' : '#E040FB'; 
+      // Manual rounded rect for fill
+      const fr = 6;
+      const fx = barX + 4;
+      const fy = barY + 4;
+      const fh = barH - 8;
+      
       ctx.beginPath();
-      ctx.roundRect(barX + 4, barY + 4, fillW, barH - 8, 6);
+      ctx.moveTo(fx + fr, fy);
+      ctx.lineTo(fx + fillW - fr, fy);
+      ctx.quadraticCurveTo(fx + fillW, fy, fx + fillW, fy + fr);
+      ctx.lineTo(fx + fillW, fy + fh - fr);
+      ctx.quadraticCurveTo(fx + fillW, fy + fh, fx + fillW - fr, fy + fh);
+      ctx.lineTo(fx + fr, fy + fh);
+      ctx.quadraticCurveTo(fx, fy + fh, fx, fy + fh - fr);
+      ctx.lineTo(fx, fy + fr);
+      ctx.quadraticCurveTo(fx, fy, fx + fr, fy);
+      ctx.closePath();
       ctx.fill();
     }
     
